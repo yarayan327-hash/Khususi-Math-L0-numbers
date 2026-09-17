@@ -8,6 +8,7 @@ interface HeaderBarProps {
   totalScenes: number;
   onSelectScene: (sceneId: number) => void;
   sceneTitle: string;
+  optionalStartScene?: number;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -15,6 +16,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   totalScenes,
   onSelectScene,
   sceneTitle,
+  optionalStartScene,
 }) => {
   const { language, setLanguage, t, formatNum } = useLanguage();
   const [isMuted, setIsMuted] = useState<boolean>(sound.isMuted);
@@ -35,6 +37,10 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       setIsFullscreen(false);
     }
   };
+
+  const visibleScenes = optionalStartScene && currentScene >= optionalStartScene
+    ? Array.from({ length: totalScenes - optionalStartScene + 1 }, (_, i) => optionalStartScene + i)
+    : Array.from({ length: optionalStartScene ? optionalStartScene - 1 : totalScenes }, (_, i) => i + 1);
 
   return (
     <header className="w-full h-[90px] px-6 lg:px-10 flex items-center justify-between z-30 bg-white/85 backdrop-blur-md border-b border-amber-200/60 shadow-xs select-none" dir="ltr">
@@ -105,7 +111,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
       {/* Center: Number Progress Navigation Breadcrumb (1 to 9) */}
       <div className="flex items-center gap-1.5 lg:gap-2 bg-amber-50/80 px-3 py-1.5 rounded-2xl border border-amber-200" dir="ltr">
-        {Array.from({ length: totalScenes }, (_, i) => i + 1).map((sceneNum) => {
+        {visibleScenes.map((sceneNum) => {
           const isActive = sceneNum === currentScene;
           const isPassed = sceneNum < currentScene;
           return (

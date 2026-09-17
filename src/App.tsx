@@ -11,8 +11,12 @@ import { Scene6MatchingChallenge } from './components/scenes/Scene6MatchingChall
 import { Scene7PlateComparison } from './components/scenes/Scene7PlateComparison';
 import { Scene8DiscoverZero } from './components/scenes/Scene8DiscoverZero';
 import { Scene9Celebration } from './components/scenes/Scene9Celebration';
+import { OptionalPracticeScene } from './components/scenes/OptionalPracticeScene';
+import { BonusChallengeScene } from './components/scenes/BonusChallengeScene';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { SceneMeta } from './types';
+import { OPTIONAL_PRACTICE } from './utils/optionalPractice';
+import { BONUS_CHALLENGE } from './utils/bonusChallenge';
 
 const SCENES_DATA: SceneMeta[] = [
   {
@@ -78,16 +82,66 @@ const SCENES_DATA: SceneMeta[] = [
     totalStages: 1,
     teacherPrompt: 'احتفل مع الطالب: «أنا أعرف الأرقام من ٠ إلى ١٠!»',
   },
+  {
+    id: 10,
+    title: 'العد السريع',
+    subtitle: 'عُدَّ التفاح واختر الرقم الصحيح.',
+    totalStages: 1,
+    teacherPrompt: 'قل: عُدَّ الأشياء واحدةً واحدة، ثم اختر الرقم الصحيح.',
+  },
+  {
+    id: 11,
+    title: 'أيهما أكثر؟',
+    subtitle: 'قارن بين مجموعتين من التفاح.',
+    totalStages: 1,
+    teacherPrompt: 'قل: عُدَّ المجموعتين، ثم اختر المجموعة التي فيها أشياء أكثر.',
+  },
+  {
+    id: 12,
+    title: 'أيهما أقل؟',
+    subtitle: 'قارن بين مجموعتين من كرات القدم.',
+    totalStages: 1,
+    teacherPrompt: 'قل: عُدَّ المجموعتين، ثم اختر المجموعة التي فيها أشياء أقل.',
+  },
+  {
+    id: 13,
+    title: 'متساويان أم لا؟',
+    subtitle: 'قارن بين مجموعتين من المكعبات.',
+    totalStages: 1,
+    teacherPrompt: 'قل: عُدَّ المجموعتين. هل العددان متساويان؟',
+  },
+  {
+    id: 14,
+    title: 'التحدي المختلط',
+    subtitle: 'عُدَّ، ثم قارن، ثم أوجد الفرق.',
+    totalStages: 2,
+    teacherPrompt: 'قل: عُدَّ أولًا، ثم قارن بين العددين.',
+  },
+  ...BONUS_CHALLENGE.ar.scenes.map((scene, index) => ({
+    id: index + 15,
+    title: scene.title,
+    subtitle: scene.subtitle,
+    totalStages: 1,
+    teacherPrompt: BONUS_CHALLENGE.ar.teacherPrompt,
+  })),
 ];
 
 function LessonApp() {
-  const { t, formatNum } = useLanguage();
+  const { t, formatNum, language } = useLanguage();
   const [currentScene, setCurrentScene] = useState<number>(1);
   const [subStage, setSubStage] = useState<number>(0);
   const [isSceneCompleted, setIsSceneCompleted] = useState<boolean>(false);
+  const [optionalResetVersion, setOptionalResetVersion] = useState<number>(0);
 
   const baseMeta = SCENES_DATA[currentScene - 1];
-  const localizedScene = t.scenes[currentScene - 1];
+  const localizedScene = currentScene <= 9
+    ? t.scenes[currentScene - 1]
+    : currentScene <= 14
+    ? OPTIONAL_PRACTICE[language].scenes[currentScene - 10]
+    : {
+        ...BONUS_CHALLENGE[language].scenes[currentScene - 15],
+        teacherPrompt: BONUS_CHALLENGE[language].teacherPrompt,
+      };
   const activeMeta = {
     ...baseMeta,
     title: localizedScene?.title || baseMeta.title,
@@ -105,6 +159,9 @@ function LessonApp() {
       // Advance to next scene
       if (currentScene < SCENES_DATA.length) {
         setCurrentScene((prev) => prev + 1);
+        setSubStage(0);
+      } else {
+        setCurrentScene(1);
         setSubStage(0);
       }
     }
@@ -124,6 +181,7 @@ function LessonApp() {
   const handleReset = () => {
     setSubStage(0);
     setIsSceneCompleted(false);
+    if (currentScene >= 10) setOptionalResetVersion((prev) => prev + 1);
   };
 
   const handleSelectScene = (sceneNum: number) => {
@@ -144,6 +202,7 @@ function LessonApp() {
         totalScenes={SCENES_DATA.length}
         onSelectScene={handleSelectScene}
         sceneTitle={activeMeta.title}
+        optionalStartScene={10}
       />
 
       {/* 2. Main Interactive Learning Canvas (Center 65%) */}
@@ -191,6 +250,23 @@ function LessonApp() {
         {currentScene === 9 && (
           <Scene9Celebration onRestart={() => handleSelectScene(1)} />
         )}
+
+        {currentScene >= 10 && currentScene <= 14 && (
+          <OptionalPracticeScene
+            key={`${currentScene}-${subStage}-${optionalResetVersion}`}
+            scene={currentScene as 10 | 11 | 12 | 13 | 14}
+            stage={subStage}
+            onComplete={handleTaskComplete}
+          />
+        )}
+
+        {currentScene >= 15 && currentScene <= 18 && (
+          <BonusChallengeScene
+            key={`${currentScene}-${optionalResetVersion}`}
+            scene={currentScene as 15 | 16 | 17 | 18}
+            onComplete={handleTaskComplete}
+          />
+        )}
       </main>
 
       {/* 3. Stable Bottom Teacher Control Bar */}
@@ -206,10 +282,10 @@ function LessonApp() {
             : undefined
         }
         nextLabel={
-          currentScene === SCENES_DATA.length
-            ? t.btnRestart
-            : subStage < activeMeta.totalStages - 1
+          subStage < activeMeta.totalStages - 1
             ? t.btnNext
+            : currentScene === SCENES_DATA.length
+            ? t.btnRestart
             : t.btnNextScene
         }
       />
