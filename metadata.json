@@ -1,0 +1,6 @@
+{
+  "name": "عالم الأرقام",
+  "description": "منهاج تفاعلي لتعليم الأعداد من ٠ إلى ١٠ للأطفال باللغة العربية",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
