@@ -159,6 +159,15 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         >
           {isFullscreen ? <Minimize2 className="w-5 h-5 text-slate-600" /> : <Maximize2 className="w-5 h-5 text-slate-600" />}
         </button>
+
+        <div className="h-12 border-l border-slate-200 pl-4 flex items-center shrink-0">
+          <img
+            src="51talk-khususi-logo.png"
+            alt="51Talk Khususi"
+            className="w-[190px] h-[54px] object-contain"
+            draggable={false}
+          />
+        </div>
       </div>
     </header>
   );
